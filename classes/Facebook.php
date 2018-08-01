@@ -123,6 +123,8 @@ class Facebook extends Curl
             }
         }
 
+        var_dump($user);
+
     }
 
     
