@@ -72,21 +72,18 @@ class Facebook extends Curl
     {
 
         $html = $this->GET([
-            'url'    => $link,
+            'url' => $link,
             'cookie' => "$this->pastaCookie/$this->email.txt",
         ]);
-
 
         $dom = new DOMDocument;
         @$dom->loadHTML($html);
         $xpath = new DOMXpath($dom);
 
-
         $elements = $xpath->query('//*[@id="messageGroup"]/div[2]/div/div[1]/div//span');
 
         if (count($elements) > 0) {
             foreach ($elements as $key => $v) {
-                print_r($v);
                 $numero = preg_replace('/[^0-9]/i', '', $v->textContent);
                 if (strlen($numero) >= 8 && strlen($numero) <= 14) {
                     return $numero;
@@ -104,8 +101,6 @@ class Facebook extends Curl
         $xpath = new DOMXpath($dom);
         $elements = $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table//a');
         $dirTel = __DIR__ . '/telefone.txt';
-
-    
 
         $lista_telefones = file_get_contents($dirTel);
 
