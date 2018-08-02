@@ -10,6 +10,7 @@ class Facebook extends Curl
     private $logado;
     private $pastaCookie;
     private $cookie;
+    private $savePhonesDir;
 
     public function __construct($email, $senha)
     {
@@ -17,7 +18,8 @@ class Facebook extends Curl
         ignore_user_abort(true);
         $this->useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
         // $this->useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36";
-        $this->pastaCookie = __DIR__;
+        $this->pastaCookie   = __DIR__;
+        $this->savePhonesDir = __DIR__ . '/telefone.csv';
         $this->email = $email;
         $this->senha = $senha;
     }
@@ -32,6 +34,7 @@ class Facebook extends Curl
         $htmlPrincipal = $this->GET($param);
         $inputs = $this->PegarValueInput($htmlPrincipal);
         $fields = $this->JuntarQueryStrings($inputs);
+
 
         $param['url'] = "https://m.facebook.com/login.php";
         $param['dados'] = $fields;
@@ -100,10 +103,10 @@ class Facebook extends Curl
         @$dom->loadHTML($html);
         $xpath = new DOMXpath($dom);
         $elements = $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table//a');
-        $dirTel = __DIR__ . '/telefone.txt';
+   
+        $lista_telefones = file_get_contents($this->savePhonesDir);
 
-        $lista_telefones = file_get_contents($dirTel);
-
+        echo "Iniciando processo de captura de telefone...<br><br><hr>";
         foreach ($elements as $key => $a) {
 
             $id_user = explode('&', explode("%3A", $a->getAttribute('href'))[1])[0];
@@ -114,8 +117,11 @@ class Facebook extends Curl
             $telefone = $this->getPhonesByLink($link_conversa);
 
             if (is_numeric($telefone)) {
-                if (strpos($lista_telefones, $telefone) === false) {
-                    file_put_contents($dirTel, "'$nome','$telefone','$link_perfil';\n", FILE_APPEND);
+               if (strpos($lista_telefones, $telefone) === false) {
+                    echo 'Registrando telefone do '.$nome.' - '.$telefone.'<br>';
+                    file_put_contents($this->savePhonesDir, "'$nome','$telefone','$link_perfil';\n", FILE_APPEND);
+                } else {
+                	echo 'Este telefone '.$telefone.' já está registrado.<br>';
                 }
             }
 
@@ -125,14 +131,22 @@ class Facebook extends Curl
 
     public function processarMensagens()
     {
+
+ 
+
         if ($this->_isLoged() == false) {
+        	echo 'Usuário '.$this->email.' não está logado, então vamos logar...<br>';
             $this->Logar();
+        } else {
+			echo 'Usuário está logado, então vamos começar...<br>';
         }
 
+        echo 'Capturando últimos 10 usuários que enviaram mensagem...<br>';
         $html = $this->GET([
             'url' => 'https://m.facebook.com/messages/?ref_component=mbasic_home_header&ref_page=MMessagingThreadlistController&refid=11',
             'cookie' => "$this->pastaCookie/$this->email.txt",
         ]);
+
 
         $collection = $this->getColletionMessages($html);
 
