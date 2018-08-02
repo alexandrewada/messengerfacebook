@@ -19,7 +19,7 @@ class Facebook extends Curl
         $this->useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
         // $this->useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36";
         $this->pastaCookie   = __DIR__;
-        $this->savePhonesDir = __DIR__ . '/telefone.csv';
+        $this->savePhonesDir = __DIR__ . '/telefone.txt';
         $this->email = $email;
         $this->senha = $senha;
     }
