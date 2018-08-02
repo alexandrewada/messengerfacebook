@@ -17,7 +17,7 @@ class Facebook extends Curl
         ignore_user_abort(true);
         // $this->useragent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)";
         $this->useragent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36";
-        $this->pastaCookie  = $_SERVER['DOCUMENT_ROOT'];
+        $this->pastaCookie = __DIR__;
         $this->email = $email;
         $this->senha = $senha;
     }
@@ -61,17 +61,61 @@ class Facebook extends Curl
 
     public function _getPhone($text) {
         $numero = preg_replace('/[^0-9]/i','',$text);    
-
         if(strlen($numero) >= 8 && strlen($numero) <= 14){
-            $data = $numero."\n\r";
-            $fp = fopen('telefones.txt', 'a');
-            fwrite($fp, $data);
-            return $numero;
+            return true;
+        } else {
+            return false;
         }
     }
 
-    public function getMessages() {
+    public function getMessagesByLink($link){
+        $html = $this->GET([
+            'url'    => $link,
+            'cookie' => "$this->pastaCookie/$this->email.txt"
+        ]);    
 
+        $dom      = new DOMDocument;
+        @$dom->loadHTML($html);
+        $xpath    = new DOMXpath($dom);
+
+        $messages = [];
+        $elements =  $xpath->query('//*[@id="messageGroup"]/div[2]/div/div[1]/div//span');
+        
+        if(count($elements) > 0){
+            foreach ($elements as $key => $v) {
+                $messages[] = $v->textContent;
+            }
+        }
+
+        return $messages;
+    }
+
+    public function getColletionMessages($html) {
+        $dom      = new DOMDocument;
+        @$dom->loadHTML($html);
+        $xpath    = new DOMXpath($dom);
+        $elements =  $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table//a');
+
+        $colletionMessages = [];
+
+        foreach ($elements as $key => $a) {
+            $id_user             =  explode('&',explode("%3A",$a->getAttribute('href'))[1])[0];
+            $link_perfil         = 'https://www.facebook.com/'.$id_user;
+            $link_conversa       = 'https:/m.facebook.com'.$a->getAttribute('href');
+
+            $colletionMessages[] =          [
+                                                'nome'           => $a->textContent,
+                                                'urlMessage'     => $link_conversa,
+                                                'urlPerfil'      => $link_perfil,
+                                                'mensagens'      => $this->getMessagesByLink($link_conversa)
+                                            ];
+        }
+
+        return $colletionMessages;
+
+    }
+
+    public function processarMensagens() {
         if($this->_isLoged() == false){
             $this->Logar();
         }
@@ -80,50 +124,11 @@ class Facebook extends Curl
                                 'url'    => 'https://m.facebook.com/messages/?ref_component=mbasic_home_header&ref_page=MMessagingThreadlistController&refid=11',
                                 'cookie' => "$this->pastaCookie/$this->email.txt"
                           ]);    
-        return $this->getMessageMessenger($html);
-    }
-
-    public function getMessageMessenger($html) {
-        $dom = new DOMDocument;
-        @$dom->loadHTML($html);
-        $xpath = new DOMXpath($dom);
-
-        $elements =  $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table');
-
-        $user = array();
         
-        foreach ($elements as $key => $table) {
-            foreach ($table->childNodes as $tr) {
-                foreach ($tr->childNodes as $td) {
-                    foreach ($td->childNodes as $div) {
-                        foreach ($div->childNodes as $h3) {
-                            foreach ($h3->childNodes as $span) {
+        $collection             = $this->getColletionMessages($html);
 
-                       
-                                if( strlen($span->getAttribute('class')) == 0){
-                                    $user[$key]['nome'] = $span->textContent;
-                                }    
-                                
-                                if( strlen($span->getAttribute('class')) == 8){
-                                    $user[$key]['ultima_mensagem'] = $this->_getPhone($span->textContent);
-                                }  
-                                
-                                if( strlen($span->getAttribute('class')) == 5){
-                                    $user[$key]['horario'] = $span->textContent;
-                                }
-                                
-                                if($span->getAttribute('href')){
-                                    $user[$key]['link'] = $span->getAttribute('href');
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        var_dump($user);
+      
+        return $collection;
 
     }
 

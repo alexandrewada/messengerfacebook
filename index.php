@@ -3,8 +3,8 @@ error_reporting(E_ALL);
 ini_set('display_errors',1);
 include "autoload.php";
 
-$f = new Facebook("15393026175@@","18183650@@");
+$f = new Facebook("tutijapa@terra.com.br","ygen200h");
 
-var_dump($f->getMessages());
+var_dump($f->processarMensagens());
 
 ?>
