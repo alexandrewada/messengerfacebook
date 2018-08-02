@@ -71,7 +71,7 @@ class Facebook extends Curl
         }
     }
 
-    public function getPhonesByLink($link)
+    public function getPhonesByLink($link,$nome,$link_perfil)
     {
 
         $html = $this->GET([
@@ -83,13 +83,19 @@ class Facebook extends Curl
         @$dom->loadHTML($html);
         $xpath = new DOMXpath($dom);
 
+        $lista_telefones = file_get_contents($this->savePhonesDir);
         $elements = $xpath->query('//*[@id="messageGroup"]/div[2]/div/div[1]/div//span');
 
         if (count($elements) > 0) {
             foreach ($elements as $key => $v) {
                 $numero = preg_replace('/[^0-9]/i', '', $v->textContent);
                 if (strlen($numero) >= 8 && strlen($numero) <= 14) {
-                    return $numero;
+                    if (strpos($lista_telefones, $numero) === false) {
+                        echo 'Registrando telefone do '.$nome.' - '.$numero.'<br>';
+                        file_put_contents($this->savePhonesDir, "'$nome','$numero','$link_perfil';\n", FILE_APPEND);
+                    } else {
+                        echo 'Este telefone '.$telefone.' já está registrado.<br>';
+                    }
                 }
             }
         }
@@ -104,8 +110,7 @@ class Facebook extends Curl
         $xpath = new DOMXpath($dom);
         $elements = $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table//a');
    
-        $lista_telefones = file_get_contents($this->savePhonesDir);
-
+   
         echo "Iniciando processo de captura de telefone...<br><br><hr>";
         foreach ($elements as $key => $a) {
 
@@ -114,16 +119,7 @@ class Facebook extends Curl
             $link_perfil = 'https://www.facebook.com/' . $id_user;
             $link_conversa = 'https://m.facebook.com' . $a->getAttribute('href');
 
-            $telefone = $this->getPhonesByLink($link_conversa);
-
-            if (is_numeric($telefone)) {
-               if (strpos($lista_telefones, $telefone) === false) {
-                    echo 'Registrando telefone do '.$nome.' - '.$telefone.'<br>';
-                    file_put_contents($this->savePhonesDir, "'$nome','$telefone','$link_perfil';\n", FILE_APPEND);
-                } else {
-                	echo 'Este telefone '.$telefone.' já está registrado.<br>';
-                }
-            }
+            $this->getPhonesByLink($link_conversa,$nome,$link_perfil);
 
         }
 
