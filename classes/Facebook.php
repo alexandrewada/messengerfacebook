@@ -38,7 +38,7 @@ class Facebook extends Curl
         
         $logar = $this->POST($param);
         $this->cookie = "$this->pastaCookie/$this->email.txt";
-        
+        echo $logar;
         return $logar;
     }
 
@@ -68,7 +68,7 @@ class Facebook extends Curl
         }
     }
 
-    public function getMessagesByLink($link){
+    public function getPhonesByLink($link){
         $html = $this->GET([
             'url'    => $link,
             'cookie' => "$this->pastaCookie/$this->email.txt"
@@ -78,16 +78,19 @@ class Facebook extends Curl
         @$dom->loadHTML($html);
         $xpath    = new DOMXpath($dom);
 
-        $messages = [];
         $elements =  $xpath->query('//*[@id="messageGroup"]/div[2]/div/div[1]/div//span');
-        
+
+      
         if(count($elements) > 0){
             foreach ($elements as $key => $v) {
-                $messages[] = $v->textContent;
+                $numero = preg_replace('/[^0-9]/i','',$v->textContent);    
+                if(strlen($numero) >= 8 && strlen($numero) <= 14){
+                    return $numero;
+                } 
             }
         }
 
-        return $messages;
+        return false;
     }
 
     public function getColletionMessages($html) {
@@ -95,23 +98,30 @@ class Facebook extends Curl
         @$dom->loadHTML($html);
         $xpath    = new DOMXpath($dom);
         $elements =  $xpath->query('//*[@id="root"]/div[1]/div[2]/div[1]/table//a');
-
-        $colletionMessages = [];
+        $dirTel   = __DIR__.'/telefone.txt';
+        $userInfo = [];
+        $lista_telefones = file_get_contents($dirTel);
 
         foreach ($elements as $key => $a) {
+
+        
             $id_user             =  explode('&',explode("%3A",$a->getAttribute('href'))[1])[0];
+            $nome                =  $a->textContent;
             $link_perfil         = 'https://www.facebook.com/'.$id_user;
             $link_conversa       = 'https:/m.facebook.com'.$a->getAttribute('href');
-
-            $colletionMessages[] =          [
-                                                'nome'           => $a->textContent,
-                                                'urlMessage'     => $link_conversa,
-                                                'urlPerfil'      => $link_perfil,
-                                                'mensagens'      => $this->getMessagesByLink($link_conversa)
-                                            ];
+     
+            $telefone            =  $this->getPhonesByLink($link_conversa);
+    
+            if(is_numeric($telefone)){
+                if(strpos($lista_telefones,$telefone) === false) {
+                    file_put_contents($dirTel,"'$nome','$telefone','$link_perfil';\n", FILE_APPEND);
+                }
+            }
+            
+             
         }
 
-        return $colletionMessages;
+        return $userInfo;
 
     }
 
