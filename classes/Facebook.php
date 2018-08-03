@@ -84,8 +84,7 @@ class Facebook extends Curl
 
 
         $lista_telefones = file_get_contents($this->savePhonesDir);
-        $elements = $xpath->query("//*[@id='messageGroup']/div/div[1]/div[1]//span");
-
+        $elements = $xpath->query("//*[@id='messageGroup']/div/div//span");
 
         if (count($elements) > 0) {
             foreach ($elements as $key => $v) {
