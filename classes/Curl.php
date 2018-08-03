@@ -2,7 +2,8 @@
 class Curl
 {
     public $useragent = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)";
-    
+    public $infoCurl;
+
     public function POST($param = array()) {
         $ch = curl_init();
         
@@ -21,6 +22,10 @@ class Curl
         curl_setopt($ch, CURLOPT_POSTFIELDS, $param['dados']);
         curl_setopt($ch, CURLOPT_POST, 1);
         $retorno = curl_exec($ch);
+     
+        $this->infoCurl = curl_getinfo($ch);
+     
+        
         curl_close($ch);
         return $retorno;
     }
@@ -41,7 +46,10 @@ class Curl
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $retorno = curl_exec($ch);
+        $this->infoCurl = curl_getinfo($ch);
+     
         curl_close($ch);
+     
         return $retorno;
     }
 }

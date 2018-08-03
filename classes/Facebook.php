@@ -26,7 +26,6 @@ class Facebook extends Curl
 
     public function Logar()
     {
-
         $param = array();
         $param['cookie'] = "$this->pastaCookie/$this->email.txt";
         $param['url'] = "https://m.facebook.com";
@@ -128,11 +127,10 @@ class Facebook extends Curl
     public function processarMensagens()
     {
 
- 
 
         if ($this->_isLoged() == false) {
         	echo 'Usuário '.$this->email.' não está logado, então vamos logar...<br>';
-            $this->Logar();
+            echo $this->Logar();
         } else {
 			echo 'Usuário está logado, então vamos começar...<br>';
         }
@@ -150,28 +148,6 @@ class Facebook extends Curl
 
     }
 
-    public function pegarNome($html)
-    {
-        $nome = preg_match_all('/Sair<\/a>(.*?)<\/span>/i', $html, $resultado);
-        $this->nome = $resultado[1][0];
-    }
-
-    public function pegarPessoasOnline($html)
-    {
-        $dom = new DOMDocument;
-        @$dom->loadHTML($html);
-        $todosInput = $dom->getElementsByTagName('a');
-        $input = array();
-
-        foreach ($todosInput as $valor) {
-            $href = $valor->getAttribute('href');
-            if (preg_match('/click_type=buddylist/i', $href)) {
-                $input[] = $href;
-            }
-        }
-
-        return $input;
-    }
 
     public function PegarHref($html, $ereg)
     {
@@ -220,18 +196,7 @@ class Facebook extends Curl
         }
     }
 
-    public function ChecarLogin($html)
-    {
-        if (preg_match('/>Sair<\/a>/', $html)) {
-            $this->Logado = true;
-            $this->html_Logado = $html;
-            return true;
-        } else {
-            $this->Logado = false;
-            return false;
-        }
-    }
-
+    
     public function JuntarQueryStrings($input)
     {
         foreach ($input as $name => $value) {
