@@ -82,8 +82,10 @@ class Facebook extends Curl
         @$dom->loadHTML($html);
         $xpath = new DOMXpath($dom);
 
+
         $lista_telefones = file_get_contents($this->savePhonesDir);
-        $elements = $xpath->query('//*[@id="messageGroup"]/div[2]/div/div[1]/div//span');
+        $elements = $xpath->query("//*[@id='messageGroup']/div/div[1]/div[1]//span");
+
 
         if (count($elements) > 0) {
             foreach ($elements as $key => $v) {
@@ -93,7 +95,7 @@ class Facebook extends Curl
                         echo 'Registrando telefone do '.$nome.' - '.$numero.'<br>';
                         file_put_contents($this->savePhonesDir, "'$nome','$numero','$link_perfil';\n", FILE_APPEND);
                     } else {
-                        echo 'Este telefone '.$telefone.' já está registrado.<br>';
+                        echo 'Este telefone '.$numero.' já está registrado.<br>';
                     }
                 }
             }
@@ -118,6 +120,7 @@ class Facebook extends Curl
             $link_perfil = 'https://www.facebook.com/' . $id_user;
             $link_conversa = 'https://m.facebook.com' . $a->getAttribute('href');
 
+            
             $this->getPhonesByLink($link_conversa,$nome,$link_perfil);
 
         }
